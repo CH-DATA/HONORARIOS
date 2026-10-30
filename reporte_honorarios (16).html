@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reporte de Honorarios</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{--bg:#eef3f8;--card:#fff;--tx:#17212b;--mut:#64748b;--bd:#dbe3ec;--hd:#1f3a5f;--row:#f1f5f9;--ac:#1f4e79;--sh:0 6px 22px rgba(20,40,70,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151c;--card:#17212b;--tx:#e8eef4;--mut:#93a4b5;--bd:#2a3846;--hd:#2c4a6e;--row:#1c2935;--ac:#8bb8e8;--sh:0 6px 22px rgba(0,0,0,.35)}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+.mut{color:var(--mut);font-size:13px}
+button{font:inherit;cursor:pointer;border-radius:10px;padding:9px 16px;border:0;background:var(--ac);color:#fff;font-weight:600}
+button.sec{background:transparent;color:var(--ac);border:1.5px solid var(--ac)}
+button.dng{background:transparent;color:var(--hd);border:1.5px solid var(--hd)}
+select{font:inherit}
+/* hoja 1 */
+.home{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 20% 10%,rgba(31,78,121,.14),transparent 45%),radial-gradient(circle at 85% 90%,rgba(31,58,95,.10),transparent 45%)}
+.hero{width:100%;max-width:520px;background:var(--card);border:1px solid var(--bd);border-radius:22px;box-shadow:var(--sh);padding:34px 30px;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center}
+.logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#1f3a5f,#3b6ea5);display:grid;place-items:center;font-size:30px}
+.hero h1{margin:0;font-size:26px}.hero p{margin:0;color:var(--mut)}
+.drop{width:100%;border:2px dashed var(--ac);border-radius:16px;padding:28px 16px;display:flex;flex-direction:column;gap:6px;align-items:center;cursor:pointer;transition:.15s}
+.drop:hover{background:rgba(31,78,121,.08)}.drop .ic{font-size:30px}.drop b{font-size:18px;color:var(--ac)}
+.vh{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.hero select{padding:8px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+/* hoja 2 */
+.app{max-width:1280px;margin:0 auto;padding:14px 18px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.top h1{margin:0;font-size:22px}.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acts button{padding:7px 13px;font-size:13px}.acts label{font-size:12px;color:var(--mut);display:flex;gap:5px;align-items:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.card.sm{padding:10px 12px;margin-bottom:12px}.card.sm h2{margin:0 0 7px;font-size:11px}
+.sl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.sl .sg{display:flex;flex-direction:column;gap:3px;padding:6px 9px;border-radius:9px;border:1px solid var(--bd);background:var(--row);font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--mut)}
+.sl .sg.on{border-color:var(--ac);background:rgba(31,78,121,.08);color:var(--ac)}
+.sl select{padding:4px 6px;border:1px solid var(--bd);border-radius:6px;background:var(--card);color:var(--tx);font-size:13px;font-weight:600;letter-spacing:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.kpi{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 14px}
+.kpi .ic{flex:none;width:38px;height:38px;border-radius:10px;background:var(--row);color:var(--ac);display:grid;place-items:center}
+.kpi .ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kpi .tx{display:flex;flex-direction:column;min-width:0}
+.kpi .kl{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+.kpi b{font-size:21px;line-height:1.15;color:var(--tx)}
+.kpi small{color:var(--mut);font-size:11px}
+.sg{position:relative}
+.msb{width:100%;text-align:left;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:4px 24px 4px 8px;font-size:13px;font-weight:600;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0}
+.msb::after{content:"▾";position:absolute;right:8px;color:var(--mut)}
+.msp{position:absolute;left:0;top:100%;margin-top:4px;z-index:30;min-width:100%;width:max-content;max-width:300px;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:var(--sh);padding:8px;font-weight:500;letter-spacing:0;text-transform:none}
+.msp .q{width:100%;padding:5px 8px;border:1px solid var(--bd);border-radius:6px;margin-bottom:6px;background:var(--card);color:var(--tx);font-size:12px}
+.msp .clr{display:block;font-size:11px;color:var(--ac);cursor:pointer;margin-bottom:6px;font-weight:600}
+.msp .lst{max-height:220px;overflow:auto}
+.msp .it{display:flex;gap:8px;align-items:center;padding:4px;font-size:13px;color:var(--tx);border-radius:6px;cursor:pointer;white-space:nowrap}
+.msp .it:hover{background:var(--row)}
+.chd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.chd h2{margin:0}
+.wrap{overflow:auto;max-height:55vh;border-radius:10px;border:1px solid var(--bd)}
+table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+th{position:sticky;top:0;background:var(--hd);color:#fff;text-align:left;padding:9px 12px;font-size:12px;letter-spacing:.04em}
+td{padding:7px 12px;border-bottom:1px solid var(--bd)}
+tbody tr:nth-child(even){background:var(--row)}tbody tr:hover{background:rgba(31,58,95,.09)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+tfoot td{font-weight:800;background:var(--card);position:sticky;bottom:0;border-top:2px solid var(--hd)}
+</style></head><body>
+<section id="v1" class="home"><div class="hero">
+<div class="logo">📊</div><h1>Reporte de Honorarios</h1>
+<p>Selecciona tu archivo Excel con la hoja “Export” para generar el reporte.</p>
+<label class="drop" for="f"><span class="ic">📂</span><b>Seleccionar archivo</b><span class="mut">.xlsx · .xls · hoja “Export”</span></label>
+<input type="file" id="f" class="vh" accept=".xlsx,.xls,.xlsm">
+<select id="modo"><option value="r">Reemplazar base</option><option value="a">Agregar a la base</option></select>
+<div class="mut" id="est">Cargando base…</div><div class="mut" id="dx"></div>
+<button id="abrir" style="display:none">Abrir reporte guardado →</button>
+</div></section>
+<section id="v2" hidden><div class="app">
+<div class="top"><div><h1>📊 Reporte de Honorarios</h1><span class="mut" id="est2"></span></div>
+<div class="acts"><div hidden><label><input type="checkbox" id="m100" checked></label><button id="limpiar"></button><button id="xl"></button><button id="borrar"></button></div><button class="sec" id="nuevo">Cambiar archivo</button></div></div>
+<div class="card sm"><h2>Segmentadores</h2><div class="sl" id="sl"></div></div>
+<div class="kpis">
+<div class="kpi"><div class="ic"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg></div><div class="tx"><span class="kl">Registros ambulatorios</span><b id="k1">0</b></div></div>
+<div class="kpi"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></div><div class="tx"><span class="kl">Suma de MONTONETO</span><b id="k2">S/ 0.00</b></div></div>
+<div class="kpi"><div class="ic"><svg viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg></div><div class="tx"><span class="kl">Suma de Cantidad_Reg</span><b id="k3">0</b></div></div>
+<div class="kpi"><div class="ic"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div><div class="tx"><span class="kl">PF CANT HONORAR</span><b id="k4">0</b><small id="k4n"></small></div></div></div>
+<div class="card"><div class="chd"><h2>Resumen por NUM_REGAMBULAT</h2><button id="tg">Ver detalle ↗</button></div>
+<div class="wrap" style="max-height:45vh"><table><thead><tr><th>NUM_REGAMBULAT</th><th>Suma de MONTONETO</th><th>Suma de Cantidad_Reg</th></tr></thead><tbody id="pvb"></tbody><tfoot id="pvf"></tfoot></table></div></div>
+</div></section>
+<section id="v3" hidden><div class="app">
+<div class="top"><div><h1>📋 Detalle de registros</h1><span class="mut" id="pie"></span></div>
+<div class="acts"><button class="sec" id="back">← Volver al resumen</button><button id="xl2">⬇ Descargar Excel</button></div></div>
+<div class="card"><div class="wrap" style="max-height:72vh"><table><thead id="th"></thead><tbody id="tb"></tbody><tfoot id="tf"></tfoot></table></div>
+<div style="margin-top:10px"><button class="sec" id="mas" style="display:none">Mostrar más</button></div></div>
+</div></section>
+<script>
+// [campo, etiqueta, alias...]
+const F=[['CANTIDAD','CANTIDAD'],['COD_DIAG','COD_DIAG','CODDIAGNOSTICO'],['DIAGNOSTICO','DIAGNOSTICO'],['ESPECIALIDAD','ESPECIALIDAD'],['GRUPO_GEN','GRUPO_GEN'],['HISTORIA','HISTORIA'],['MEDICO','MEDICO'],['MONTONETO','MONTONETO'],['NUM_REGAMBULAT','NUM_REGAMBULAT'],['ORIGEN','ORIGEN'],['PACIENTE','PACIENTE'],['TARIFA','TARIFA'],['FEC_REGISTRO_PM_2','REGISTRO','REGISTRO','FECREGISTRO'],['Cantidad_Reg','Cantidad_Reg'],['TIPO_RUBRO','TIPO_RUBRO']];
+const SLICERS=['TIPO_RUBRO','TARIFA','Cantidad_Reg','FEC_REGISTRO_PM_2','MEDICO','GRUPO_GEN'];
+const SHOW=F.filter(x=>x[0]!=='TIPO_RUBRO');
+const nz=s=>String(s).toUpperCase().normalize('NFD').replace(/[^A-Z0-9]/g,'');
+let DATA=[],FIL={},LIM=300,VIEW=[],HDR=[],MISS=[],GR=[];
+const Q=x=>!$('m100').checked||x.c>=2||(x.c===1&&x.m>=100);
+function setDef(){FIL={};const f=(k,t)=>{const r=DATA.find(r=>nz(r[k])===t);if(r)FIL[k]=[String(r[k])]};f('TIPO_RUBRO','HONORARIOS');f('GRUPO_GEN','PLANFAMILIAR')}
+const $=id=>document.getElementById(id);
+const money=v=>'S/ '+(+v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// IndexedDB
+function db(){return new Promise((ok,ko)=>{try{const r=indexedDB.open('honorarios',1);r.onupgradeneeded=()=>r.result.createObjectStore('k');r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)}catch(e){ko(e)}})}
+async function save(rows){try{const d=await db();d.transaction('k','readwrite').objectStore('k').put({rows,at:Date.now(),v:2},'export')}catch(e){$('est').textContent='No se pudo guardar en este navegador.'}}
+async function load(){try{const d=await db();return await new Promise(ok=>{const r=d.transaction('k').objectStore('k').get('export');r.onsuccess=()=>ok(r.result);r.onerror=()=>ok(null)})}catch(e){return null}}
+function fmtDate(v){if(v instanceof Date){const p=n=>String(n).padStart(2,'0');return p(v.getUTCDate())+'/'+p(v.getUTCMonth()+1)+'/'+v.getUTCFullYear()}return String(v??'').trim()}
+function parse(wb){
+  const name=wb.SheetNames.find(s=>s.trim().toLowerCase()==='export');
+  if(!name)throw new Error('No se encontró la hoja “Export”. Hojas: '+wb.SheetNames.join(', '));
+  const aoa=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,defval:''});
+  const hi=aoa.findIndex(r=>r.some(c=>nz(c)==='MONTONETO'));
+  if(hi<0)throw new Error('No se encontró la columna MONTONETO en la hoja Export.');
+  const hn=aoa[hi].map(nz),idx={};
+  F.forEach(([k,,...al])=>{const c=[k,...al].map(nz);let i=hn.findIndex(h=>c.includes(h));if(i<0&&k!=='Cantidad_Reg'&&k!=='CANTIDAD')i=hn.findIndex(h=>h&&c.some(a=>a.startsWith(h)||h.startsWith(a)));idx[k]=i});
+  HDR=aoa[hi].map(x=>String(x).trim()).filter(Boolean);MISS=[];
+  if(idx['Cantidad_Reg']<0&&idx['CANTIDAD']>=0){idx['Cantidad_Reg']=idx['CANTIDAD'];MISS.push('Cantidad_Reg (se usó CANTIDAD en su lugar)')}
+  F.forEach(([k])=>{if(idx[k]<0)MISS.push(k)});
+  return aoa.slice(hi+1).filter(r=>r.some(c=>c!=='')).map(r=>{const o={};F.forEach(([k])=>{let v=idx[k]>=0?r[idx[k]]:'';if(k==='MONTONETO'||k==='Cantidad_Reg'||k==='CANTIDAD')v=parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0;else if(k==='FEC_REGISTRO_PM_2')v=fmtDate(v);else v=String(v??'').trim();o[k]=v});return o})}
+const txt=a=>a.length?(a.length===1?a[0]:a.length+' seleccionados'):'(Todas)';
+function buildSlicers(){
+  $('sl').innerHTML=SLICERS.map(k=>{const vals=[...new Set(DATA.map(r=>r[k]))].sort((a,b)=>typeof a==='number'?a-b:String(a).localeCompare(String(b)));const sel=FIL[k]||[];
+    return `<div class="sg ${sel.length?'on':''}" data-k="${k}">${k}<button type="button" class="msb">${esc(txt(sel))}</button><div class="msp" hidden>${vals.length>8?'<input class="q" placeholder="Buscar…">':''}<a class="clr">Limpiar selección</a><div class="lst">${vals.map(v=>`<label class="it"><input type="checkbox" value="${esc(v).replace(/"/g,'&quot;')}" ${sel.includes(String(v))?'checked':''}> ${esc(v)}</label>`).join('')}</div></div></div>`}).join('');
+  document.querySelectorAll('#sl .sg').forEach(g=>{
+    const k=g.dataset.k,btn=g.querySelector('.msb'),pn=g.querySelector('.msp'),cbs=[...pn.querySelectorAll('input[type=checkbox]')];
+    const upd=()=>{const v=cbs.filter(c=>c.checked).map(c=>c.value);if(v.length)FIL[k]=v;else delete FIL[k];btn.textContent=txt(v);g.classList.toggle('on',v.length>0);LIM=300;render()};
+    btn.onclick=()=>{const o=pn.hidden;document.querySelectorAll('#sl .msp').forEach(x=>x.hidden=true);pn.hidden=!o};
+    cbs.forEach(c=>c.onchange=upd);
+    pn.querySelector('.clr').onclick=()=>{cbs.forEach(c=>c.checked=false);upd()};
+    const q=pn.querySelector('.q');if(q)q.oninput=()=>{const t=nz(q.value);pn.querySelectorAll('.it').forEach(l=>l.style.display=nz(l.textContent).includes(t)?'':'none')};
+  })}
+document.addEventListener('click',e=>{if(!e.target.closest('#sl .sg'))document.querySelectorAll('#sl .msp').forEach(x=>x.hidden=true)});
+function groups(force){const g={};DATA.forEach(r=>{
+  if(force&&!(nz(r.TIPO_RUBRO)==='HONORARIOS'&&nz(r.GRUPO_GEN).startsWith('PLANFAMIL')))return;
+  if(!Object.entries(FIL).every(([k,v])=>(force&&(k==='TIPO_RUBRO'||k==='GRUPO_GEN'))||v.includes(String(r[k]))))return;
+  const x=g[r.NUM_REGAMBULAT]||(g[r.NUM_REGAMBULAT]={n:r.NUM_REGAMBULAT,c:0,m:0,rows:[]});x.c+=r.Cantidad_Reg;x.m+=r.MONTONETO;x.rows.push(r)});
+  return Object.values(g).filter(Q)}
+function render(){
+  // por NUM_REGAMBULAT: entra si suma de Cantidad_Reg >= 2; si es 1, entra solo con suma de MONTONETO >= 100
+  const G=groups(false).sort((a,b)=>b.c-a.c||String(a.n).localeCompare(String(b.n),undefined,{numeric:true}));
+  VIEW=G.flatMap(x=>x.rows);GR=G;
+  const sm=VIEW.reduce((s,r)=>s+r.MONTONETO,0),sc=VIEW.reduce((s,r)=>s+r.Cantidad_Reg,0);
+  const P=groups(true),pf=P.reduce((s,x)=>s+x.c,0);
+  $('k1').textContent=G.length.toLocaleString();$('k2').textContent=money(sm);$('k3').textContent=sc.toLocaleString();
+  $('k4').textContent=pf.toLocaleString();$('k4n').textContent=P.length.toLocaleString()+' registros ambulatorios';
+  $('pvb').innerHTML=G.map(x=>`<tr><td>${esc(x.n)}</td><td class="n">${money(x.m)}</td><td class="n">${x.c}</td></tr>`).join('');
+  $('pvf').innerHTML=`<tr><td>Total (${G.length})</td><td class="n">${money(sm)}</td><td class="n">${sc.toLocaleString()}</td></tr>`;
+  $('th').innerHTML='<tr>'+SHOW.map(x=>`<th>${x[1]}</th>`).join('')+'</tr>';
+  $('tb').innerHTML=VIEW.slice(0,LIM).map(r=>'<tr>'+SHOW.map(([k])=>k==='MONTONETO'?`<td class="n">${money(r[k])}</td>`:`<td class="${k==='Cantidad_Reg'||k==='CANTIDAD'?'n':''}">${esc(r[k])}</td>`).join('')+'</tr>').join('');
+  $('tf').innerHTML='<tr>'+SHOW.map(([k],i)=>`<td class="${k==='MONTONETO'||k==='Cantidad_Reg'?'n':''}">${k==='MONTONETO'?money(sm):k==='Cantidad_Reg'?sc.toLocaleString():i==0?'Total':''}</td>`).join('')+'</tr>';
+  $('mas').style.display=VIEW.length>LIM?'':'none';
+  $('pie').textContent=`Detalle: mostrando ${Math.min(LIM,VIEW.length)} de ${VIEW.length} filas`}
+$('m100').onchange=()=>{LIM=300;render()};
+$('mas').onclick=()=>{LIM+=500;render()};
+$('limpiar').onclick=()=>{setDef();LIM=300;buildSlicers();render()};
+$('borrar').onclick=async()=>{if(!confirm('¿Borrar la base guardada?'))return;DATA=[];FIL={};await save([]);buildSlicers();render();$('est').textContent='Base vacía.';show(1)};
+const dl0=()=>{if(!VIEW.length)return;const ws=XLSX.utils.json_to_sheet(VIEW.map(r=>{const o={};SHOW.forEach(([k,l])=>o[l]=r[k]);return o}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Filtrado');XLSX.writeFile(wb,'honorarios_filtrado.xlsx')};const thin={top:{style:'thin',color:{argb:'FFDBE3EC'}},left:{style:'thin',color:{argb:'FFDBE3EC'}},bottom:{style:'thin',color:{argb:'FFDBE3EC'}},right:{style:'thin',color:{argb:'FFDBE3EC'}}};
+const fill=c=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
+const MON='"S/ "#,##0.00';
+async function dl(){
+  if(!VIEW.length)return;
+  if(typeof ExcelJS==='undefined')return dl0();
+  const wb=new ExcelJS.Workbook();
+  const filt='Filtros: '+(Object.entries(FIL).map(([k,v])=>k+' = '+v.join(', ')).join('   |   ')||'Sin filtros');
+  const sheet=(name,cols,rows,fmts,tot)=>{
+    const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:4,showGridLines:false}]}),n=cols.length;
+    ws.mergeCells(1,1,1,n);const t=ws.getCell(1,1);t.value='Reporte de Honorarios · '+name;t.font={bold:true,size:16,color:{argb:'FF1F3A5F'}};ws.getRow(1).height=26;
+    ws.mergeCells(2,1,2,n);const f=ws.getCell(2,1);f.value=filt;f.font={italic:true,color:{argb:'FF64748B'}};
+    const h=ws.getRow(4);h.height=26;
+    cols.forEach((c,i)=>{const x=h.getCell(i+1);x.value=c;x.font={bold:true,color:{argb:'FFFFFFFF'}};x.fill=fill('FF1F3A5F');x.alignment={horizontal:'center',vertical:'middle'};x.border=thin});
+    rows.forEach((r,ri)=>{const row=ws.getRow(5+ri);r.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;c.border=thin;if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'};if(ri%2)c.fill=fill('FFEEF3F8')})});
+    const tr=ws.getRow(5+rows.length);
+    tot.forEach((v,i)=>{const c=tr.getCell(i+1);c.value=v;c.font={bold:true};c.fill=fill('FFE2E8F0');c.border={...thin,top:{style:'medium',color:{argb:'FF1F3A5F'}}};if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'}});
+    cols.forEach((c,i)=>{let w=String(c).length+4;rows.forEach(r=>{const v=r[i];const l=typeof v==='number'?(fmts[i]===MON?12:String(v).length+2):String(v??'').length+2;if(l>w)w=l});ws.getColumn(i+1).width=Math.min(48,w)});
+    ws.autoFilter={from:{row:4,column:1},to:{row:4,column:n}};
+  };
+  const sm=GR.reduce((a,x)=>a+x.m,0),sc=GR.reduce((a,x)=>a+x.c,0);
+  sheet('Resumen',['NUM_REGAMBULAT','Suma de MONTONETO','Suma de Cantidad_Reg'],GR.map(x=>[x.n,x.m,x.c]),[null,MON,'0'],['Total ('+GR.length+')',sm,sc]);
+  sheet('Detalle',SHOW.map(x=>x[1]),VIEW.map(r=>SHOW.map(([k])=>r[k])),SHOW.map(([k])=>k==='MONTONETO'?MON:(k==='CANTIDAD'||k==='Cantidad_Reg')?'0':null),SHOW.map(([k],i)=>k==='MONTONETO'?VIEW.reduce((a,r)=>a+r.MONTONETO,0):k==='Cantidad_Reg'?VIEW.reduce((a,r)=>a+r.Cantidad_Reg,0):i===0?'Total':''));
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='honorarios_filtrado.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+$('xl').onclick=dl;$('xl2').onclick=dl;
+$('f').onchange=async e=>{const file=e.target.files[0];if(!file)return;$('est').textContent='Leyendo…';
+  try{const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});let rows=parse(wb);
+    if($('modo').value==='a'){const key=r=>[r.NUM_REGAMBULAT,r.COD_DIAG,r.MONTONETO,r.Cantidad_Reg,r.TARIFA,r.FEC_REGISTRO_PM_2].join('|');const s=new Set(DATA.map(key));rows=DATA.concat(rows.filter(r=>!s.has(key(r))))}
+    DATA=rows;setDef();await save(DATA);buildSlicers();render();$('est').textContent=`Base guardada: ${DATA.length.toLocaleString()} registros`;$('dx').textContent=MISS.length?'Columnas no encontradas: '+MISS.join(', ')+'. Columnas de tu hoja Export: '+HDR.join(', '):'';if(!MISS.length)show(2);else show(1)}
+  catch(err){$('est').textContent='Error: '+err.message}
+  e.target.value=''};
+(async()=>{const s=await load();DATA=(s&&s.v===2&&s.rows)||[];setDef();buildSlicers();render();$('est').textContent=DATA.length?`Base guardada: ${DATA.length.toLocaleString()} registros (${new Date(s.at).toLocaleString('es-PE')})`:'Base vacía. Sube de nuevo tu Excel con la hoja Export.';show(DATA.length?2:1)})();
+function show(v){$('v1').hidden=v!==1;$('v2').hidden=v!==2;$('v3').hidden=v!==3;$('abrir').style.display=DATA.length?'':'none';$('est2').textContent=$('est').textContent;window.scrollTo(0,0)}
+$('nuevo').onclick=()=>show(1);$('abrir').onclick=()=>show(2);
+$('tg').onclick=()=>show(3);$('back').onclick=()=>show(2);
+</script></body></html>
