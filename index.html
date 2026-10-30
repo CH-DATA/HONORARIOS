@@ -5,8 +5,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-:root{--bg:#eef3f8;--card:#fff;--tx:#17212b;--mut:#64748b;--bd:#dbe3ec;--hd:#1f3a5f;--row:#f1f5f9;--ac:#1f4e79;--sh:0 6px 22px rgba(20,40,70,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151c;--card:#17212b;--tx:#e8eef4;--mut:#93a4b5;--bd:#2a3846;--hd:#2c4a6e;--row:#1c2935;--ac:#8bb8e8;--sh:0 6px 22px rgba(0,0,0,.35)}}
+:root{--bg:#eef3f8;--card:#fff;--tx:#17212b;--mut:#64748b;--bd:#dbe3ec;--hd:#1f3a5f;--row:#f1f5f9;--ac:#1f4e79;--g0:#b9cdec;--g1:#cfd3da;--sh:0 6px 22px rgba(20,40,70,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151c;--card:#17212b;--tx:#e8eef4;--mut:#93a4b5;--bd:#2a3846;--hd:#2c4a6e;--row:#1c2935;--ac:#8bb8e8;--g0:#2f5075;--g1:#3d454f;--sh:0 6px 22px rgba(0,0,0,.35)}}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx)}
@@ -45,6 +45,7 @@ select{font:inherit}
 .kpi b{font-size:21px;line-height:1.15;color:var(--tx)}
 .kpi small{color:var(--mut);font-size:11px}
 .sg{position:relative}
+#tb tr.g0{background:var(--g0)}#tb tr.g1{background:var(--g1)}#tb tr:hover{filter:brightness(.95)}#tb td{border-bottom:1px solid rgba(255,255,255,.55)}
 .msb{width:100%;text-align:left;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:4px 24px 4px 8px;font-size:13px;font-weight:600;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0}
 .msb::after{content:"▾";position:absolute;right:8px;color:var(--mut)}
 .msp{position:absolute;left:0;top:100%;margin-top:4px;z-index:30;min-width:100%;width:max-content;max-width:300px;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:var(--sh);padding:8px;font-weight:500;letter-spacing:0;text-transform:none}
@@ -141,15 +142,17 @@ function render(){
   // por NUM_REGAMBULAT: entra si suma de Cantidad_Reg >= 2; si es 1, entra solo con suma de MONTONETO >= 100
   const G=groups(false).sort((a,b)=>b.c-a.c||String(a.n).localeCompare(String(b.n),undefined,{numeric:true}));
   VIEW=G.flatMap(x=>x.rows);GR=G;
+  const NOTE='INCLUIDO EN HONORARIOS DE CONSULTA',NOTE2='INCLUIDO EN HONORARIOS DE PROCEDIMIENTO',isB=t=>/^(BLOQUEO|CURA)/.test(String(t).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')),isC=t=>/^(DIURNA|NOCTURNA|CONSULTA)/.test(String(t).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+  G.forEach((x,i)=>{const hc=x.rows.some(r=>isC(r.TARIFA));x.rows.forEach(r=>{r._g=i;r._note=isB(r.TARIFA)?(hc?NOTE:NOTE2):''})});
   const sm=VIEW.reduce((s,r)=>s+r.MONTONETO,0),sc=VIEW.reduce((s,r)=>s+r.Cantidad_Reg,0);
   const P=groups(true),pf=P.reduce((s,x)=>s+x.c,0);
   $('k1').textContent=G.length.toLocaleString();$('k2').textContent=money(sm);$('k3').textContent=sc.toLocaleString();
   $('k4').textContent=pf.toLocaleString();$('k4n').textContent=P.length.toLocaleString()+' registros ambulatorios';
   $('pvb').innerHTML=G.map(x=>`<tr><td>${esc(x.n)}</td><td class="n">${money(x.m)}</td><td class="n">${x.c}</td></tr>`).join('');
   $('pvf').innerHTML=`<tr><td>Total (${G.length})</td><td class="n">${money(sm)}</td><td class="n">${sc.toLocaleString()}</td></tr>`;
-  $('th').innerHTML='<tr>'+SHOW.map(x=>`<th>${x[1]}</th>`).join('')+'</tr>';
-  $('tb').innerHTML=VIEW.slice(0,LIM).map(r=>'<tr>'+SHOW.map(([k])=>k==='MONTONETO'?`<td class="n">${money(r[k])}</td>`:`<td class="${k==='Cantidad_Reg'||k==='CANTIDAD'?'n':''}">${esc(r[k])}</td>`).join('')+'</tr>').join('');
-  $('tf').innerHTML='<tr>'+SHOW.map(([k],i)=>`<td class="${k==='MONTONETO'||k==='Cantidad_Reg'?'n':''}">${k==='MONTONETO'?money(sm):k==='Cantidad_Reg'?sc.toLocaleString():i==0?'Total':''}</td>`).join('')+'</tr>';
+  $('th').innerHTML='<tr>'+SHOW.map(x=>`<th>${x[1]}</th>`).join('')+'<th>OBSERVACIÓN</th></tr>';
+  $('tb').innerHTML=VIEW.slice(0,LIM).map(r=>'<tr class="g'+(r._g%2)+'">'+SHOW.map(([k])=>k==='MONTONETO'?`<td class="n">${money(r[k])}</td>`:`<td class="${k==='Cantidad_Reg'||k==='CANTIDAD'?'n':''}">${esc(r[k])}</td>`).join('')+`<td>${esc(r._note)}</td></tr>`).join('');
+  $('tf').innerHTML='<tr>'+SHOW.map(([k],i)=>`<td class="${k==='MONTONETO'||k==='Cantidad_Reg'?'n':''}">${k==='MONTONETO'?money(sm):k==='Cantidad_Reg'?sc.toLocaleString():i==0?'Total':''}</td>`).join('')+'<td></td></tr>';
   $('mas').style.display=VIEW.length>LIM?'':'none';
   $('pie').textContent=`Detalle: mostrando ${Math.min(LIM,VIEW.length)} de ${VIEW.length} filas`}
 $('m100').onchange=()=>{LIM=300;render()};
@@ -164,13 +167,13 @@ async function dl(){
   if(typeof ExcelJS==='undefined')return dl0();
   const wb=new ExcelJS.Workbook();
   const filt='Filtros: '+(Object.entries(FIL).map(([k,v])=>k+' = '+v.join(', ')).join('   |   ')||'Sin filtros');
-  const sheet=(name,cols,rows,fmts,tot)=>{
+  const sheet=(name,cols,rows,fmts,tot,rf)=>{
     const ws=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:4,showGridLines:false}]}),n=cols.length;
     ws.mergeCells(1,1,1,n);const t=ws.getCell(1,1);t.value='Reporte de Honorarios · '+name;t.font={bold:true,size:16,color:{argb:'FF1F3A5F'}};ws.getRow(1).height=26;
     ws.mergeCells(2,1,2,n);const f=ws.getCell(2,1);f.value=filt;f.font={italic:true,color:{argb:'FF64748B'}};
     const h=ws.getRow(4);h.height=26;
     cols.forEach((c,i)=>{const x=h.getCell(i+1);x.value=c;x.font={bold:true,color:{argb:'FFFFFFFF'}};x.fill=fill('FF1F3A5F');x.alignment={horizontal:'center',vertical:'middle'};x.border=thin});
-    rows.forEach((r,ri)=>{const row=ws.getRow(5+ri);r.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;c.border=thin;if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'};if(ri%2)c.fill=fill('FFEEF3F8')})});
+    rows.forEach((r,ri)=>{const row=ws.getRow(5+ri);r.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;c.border=thin;if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'};{const fc=rf?rf[ri]:(ri%2?'FFEEF3F8':null);if(fc)c.fill=fill(fc)}})});
     const tr=ws.getRow(5+rows.length);
     tot.forEach((v,i)=>{const c=tr.getCell(i+1);c.value=v;c.font={bold:true};c.fill=fill('FFE2E8F0');c.border={...thin,top:{style:'medium',color:{argb:'FF1F3A5F'}}};if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'}});
     cols.forEach((c,i)=>{let w=String(c).length+4;rows.forEach(r=>{const v=r[i];const l=typeof v==='number'?(fmts[i]===MON?12:String(v).length+2):String(v??'').length+2;if(l>w)w=l});ws.getColumn(i+1).width=Math.min(48,w)});
@@ -178,7 +181,7 @@ async function dl(){
   };
   const sm=GR.reduce((a,x)=>a+x.m,0),sc=GR.reduce((a,x)=>a+x.c,0);
   sheet('Resumen',['NUM_REGAMBULAT','Suma de MONTONETO','Suma de Cantidad_Reg'],GR.map(x=>[x.n,x.m,x.c]),[null,MON,'0'],['Total ('+GR.length+')',sm,sc]);
-  sheet('Detalle',SHOW.map(x=>x[1]),VIEW.map(r=>SHOW.map(([k])=>r[k])),SHOW.map(([k])=>k==='MONTONETO'?MON:(k==='CANTIDAD'||k==='Cantidad_Reg')?'0':null),SHOW.map(([k],i)=>k==='MONTONETO'?VIEW.reduce((a,r)=>a+r.MONTONETO,0):k==='Cantidad_Reg'?VIEW.reduce((a,r)=>a+r.Cantidad_Reg,0):i===0?'Total':''));
+  sheet('Detalle',[...SHOW.map(x=>x[1]),'OBSERVACIÓN'],VIEW.map(r=>[...SHOW.map(([k])=>r[k]),r._note]),[...SHOW.map(([k])=>k==='MONTONETO'?MON:(k==='CANTIDAD'||k==='Cantidad_Reg')?'0':null),null],[...SHOW.map(([k],i)=>k==='MONTONETO'?VIEW.reduce((a,r)=>a+r.MONTONETO,0):k==='Cantidad_Reg'?VIEW.reduce((a,r)=>a+r.Cantidad_Reg,0):i===0?'Total':''),''],VIEW.map(r=>r._g%2?'FFCFD3DA':'FFB9CDEC'));
   const buf=await wb.xlsx.writeBuffer();
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='honorarios_filtrado.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
 }
