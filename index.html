@@ -5,8 +5,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-:root{--bg:#eef3f8;--card:#fff;--tx:#17212b;--mut:#64748b;--bd:#dbe3ec;--hd:#1f3a5f;--row:#f1f5f9;--ac:#1f4e79;--g0:#b9cdec;--g1:#cfd3da;--sh:0 6px 22px rgba(20,40,70,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151c;--card:#17212b;--tx:#e8eef4;--mut:#93a4b5;--bd:#2a3846;--hd:#2c4a6e;--row:#1c2935;--ac:#8bb8e8;--g0:#2f5075;--g1:#3d454f;--sh:0 6px 22px rgba(0,0,0,.35)}}
+:root{--bg:#eef3f8;--card:#fff;--tx:#17212b;--mut:#64748b;--bd:#dbe3ec;--hd:#1f3a5f;--row:#f1f5f9;--ac:#1f4e79;--g0:#b9cdec;--g1:#cfd3da;--g2:#f6b57a;--sh:0 6px 22px rgba(20,40,70,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e151c;--card:#17212b;--tx:#e8eef4;--mut:#93a4b5;--bd:#2a3846;--hd:#2c4a6e;--row:#1c2935;--ac:#8bb8e8;--g0:#2f5075;--g1:#3d454f;--g2:#9a5a22;--sh:0 6px 22px rgba(0,0,0,.35)}}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx)}
@@ -45,7 +45,7 @@ select{font:inherit}
 .kpi b{font-size:21px;line-height:1.15;color:var(--tx)}
 .kpi small{color:var(--mut);font-size:11px}
 .sg{position:relative}
-#tb tr.g0{background:var(--g0)}#tb tr.g1{background:var(--g1)}#tb tr:hover{filter:brightness(.95)}#tb td{border-bottom:1px solid rgba(255,255,255,.55)}
+#tb tr.g0{background:var(--g0)}#tb tr.g1{background:var(--g1)}#tb tr.g2{background:var(--g2)}#tb tr:hover{filter:brightness(.95)}#tb td{border-bottom:1px solid rgba(255,255,255,.55)}
 .msb{width:100%;text-align:left;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:4px 24px 4px 8px;font-size:13px;font-weight:600;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0}
 .msb::after{content:"▾";position:absolute;right:8px;color:var(--mut)}
 .msp{position:absolute;left:0;top:100%;margin-top:4px;z-index:30;min-width:100%;width:max-content;max-width:300px;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:var(--sh);padding:8px;font-weight:500;letter-spacing:0;text-transform:none}
@@ -123,13 +123,14 @@ function parse(wb){
 const txt=a=>a.length?(a.length===1?a[0]:a.length+' seleccionados'):'(Todas)';
 function buildSlicers(){
   $('sl').innerHTML=SLICERS.map(k=>{const vals=[...new Set(DATA.map(r=>r[k]))].sort((a,b)=>typeof a==='number'?a-b:String(a).localeCompare(String(b)));const sel=FIL[k]||[];
-    return `<div class="sg ${sel.length?'on':''}" data-k="${k}">${k}<button type="button" class="msb">${esc(txt(sel))}</button><div class="msp" hidden>${vals.length>8?'<input class="q" placeholder="Buscar…">':''}<a class="clr">Limpiar selección</a><div class="lst">${vals.map(v=>`<label class="it"><input type="checkbox" value="${esc(v).replace(/"/g,'&quot;')}" ${sel.includes(String(v))?'checked':''}> ${esc(v)}</label>`).join('')}</div></div></div>`}).join('');
+    return `<div class="sg ${sel.length?'on':''}" data-k="${k}">${k}<button type="button" class="msb">${esc(txt(sel))}</button><div class="msp" hidden>${vals.length>8?'<input class="q" placeholder="Buscar…">':''}<a class="clr">Limpiar selección</a>${k==='GRUPO_GEN'?'<a class="clr all">Agregar todos</a>':''}<div class="lst">${vals.map(v=>`<label class="it"><input type="checkbox" value="${esc(v).replace(/"/g,'&quot;')}" ${sel.includes(String(v))?'checked':''}> ${esc(v)}</label>`).join('')}</div></div></div>`}).join('');
   document.querySelectorAll('#sl .sg').forEach(g=>{
     const k=g.dataset.k,btn=g.querySelector('.msb'),pn=g.querySelector('.msp'),cbs=[...pn.querySelectorAll('input[type=checkbox]')];
     const upd=()=>{const v=cbs.filter(c=>c.checked).map(c=>c.value);if(v.length)FIL[k]=v;else delete FIL[k];btn.textContent=txt(v);g.classList.toggle('on',v.length>0);LIM=300;render()};
     btn.onclick=()=>{const o=pn.hidden;document.querySelectorAll('#sl .msp').forEach(x=>x.hidden=true);pn.hidden=!o};
     cbs.forEach(c=>c.onchange=upd);
     pn.querySelector('.clr').onclick=()=>{cbs.forEach(c=>c.checked=false);upd()};
+    const al=pn.querySelector('.all');if(al)al.onclick=()=>{cbs.filter(c=>c.closest('.it').style.display!=='none').forEach(c=>c.checked=true);upd()};
     const q=pn.querySelector('.q');if(q)q.oninput=()=>{const t=nz(q.value);pn.querySelectorAll('.it').forEach(l=>l.style.display=nz(l.textContent).includes(t)?'':'none')};
   })}
 document.addEventListener('click',e=>{if(!e.target.closest('#sl .sg'))document.querySelectorAll('#sl .msp').forEach(x=>x.hidden=true)});
@@ -142,8 +143,8 @@ function render(){
   // por NUM_REGAMBULAT: entra si suma de Cantidad_Reg >= 2; si es 1, entra solo con suma de MONTONETO >= 100
   const G=groups(false).sort((a,b)=>b.c-a.c||String(a.n).localeCompare(String(b.n),undefined,{numeric:true}));
   VIEW=G.flatMap(x=>x.rows);GR=G;
-  const NOTE='INCLUIDO EN HONORARIOS DE CONSULTA',NOTE2='INCLUIDO EN HONORARIOS DE PROCEDIMIENTO',isB=t=>/^(BLOQUEO|CURA)/.test(String(t).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')),isC=t=>/^(DIURNA|NOCTURNA|CONSULTA)/.test(String(t).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
-  G.forEach((x,i)=>{const hc=x.rows.some(r=>isC(r.TARIFA));x.rows.forEach(r=>{r._g=i;r._note=isB(r.TARIFA)?(hc?NOTE:NOTE2):''})});
+  const NOTE='INCLUIDO EN HONORARIOS DE CONSULTA',NOTE2='INCLUIDO EN HONORARIOS DE PROCEDIMIENTO',NOTE3='RETIRAR MEDICO, SOLO REALIZA TRIAJE',nt=t=>String(t).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),isB=t=>/^(BLOQUEO|CURA)/.test(nt(t)),isC=t=>/^(DIURNA|NOCTURNA|CONSULTA)/.test(nt(t)),isT=e=>/EMERGENCIAPEDIATRICA|PEDIATRIA|EMERGENCISTA/.test(nz(e));
+  G.forEach((x,i)=>{const hc=x.rows.some(r=>isC(r.TARIFA)),hp=x.rows.some(r=>!isC(r.TARIFA)&&!isB(r.TARIFA));x.rows.forEach(r=>{r._g=i;r._note=[isB(r.TARIFA)?(hc&&!hp?NOTE:NOTE2):'',isT(r.ESPECIALIDAD)?NOTE3:''].filter(Boolean).join(' | ')});const o=x.rows.every(r=>r._note.includes(NOTE3));x.rows.forEach(r=>r._o=o)});
   const sm=VIEW.reduce((s,r)=>s+r.MONTONETO,0),sc=VIEW.reduce((s,r)=>s+r.Cantidad_Reg,0);
   const P=groups(true),pf=P.reduce((s,x)=>s+x.c,0);
   $('k1').textContent=G.length.toLocaleString();$('k2').textContent=money(sm);$('k3').textContent=sc.toLocaleString();
@@ -151,7 +152,7 @@ function render(){
   $('pvb').innerHTML=G.map(x=>`<tr><td>${esc(x.n)}</td><td class="n">${money(x.m)}</td><td class="n">${x.c}</td></tr>`).join('');
   $('pvf').innerHTML=`<tr><td>Total (${G.length})</td><td class="n">${money(sm)}</td><td class="n">${sc.toLocaleString()}</td></tr>`;
   $('th').innerHTML='<tr>'+SHOW.map(x=>`<th>${x[1]}</th>`).join('')+'<th>OBSERVACIÓN</th></tr>';
-  $('tb').innerHTML=VIEW.slice(0,LIM).map(r=>'<tr class="g'+(r._g%2)+'">'+SHOW.map(([k])=>k==='MONTONETO'?`<td class="n">${money(r[k])}</td>`:`<td class="${k==='Cantidad_Reg'||k==='CANTIDAD'?'n':''}">${esc(r[k])}</td>`).join('')+`<td>${esc(r._note)}</td></tr>`).join('');
+  $('tb').innerHTML=VIEW.slice(0,LIM).map(r=>'<tr class="'+(r._o?'g2':'g'+(r._g%2))+'">'+SHOW.map(([k])=>k==='MONTONETO'?`<td class="n">${money(r[k])}</td>`:`<td class="${k==='Cantidad_Reg'||k==='CANTIDAD'?'n':''}">${esc(r[k])}</td>`).join('')+`<td>${esc(r._note)}</td></tr>`).join('');
   $('tf').innerHTML='<tr>'+SHOW.map(([k],i)=>`<td class="${k==='MONTONETO'||k==='Cantidad_Reg'?'n':''}">${k==='MONTONETO'?money(sm):k==='Cantidad_Reg'?sc.toLocaleString():i==0?'Total':''}</td>`).join('')+'<td></td></tr>';
   $('mas').style.display=VIEW.length>LIM?'':'none';
   $('pie').textContent=`Detalle: mostrando ${Math.min(LIM,VIEW.length)} de ${VIEW.length} filas`}
@@ -181,7 +182,7 @@ async function dl(){
   };
   const sm=GR.reduce((a,x)=>a+x.m,0),sc=GR.reduce((a,x)=>a+x.c,0);
   sheet('Resumen',['NUM_REGAMBULAT','Suma de MONTONETO','Suma de Cantidad_Reg'],GR.map(x=>[x.n,x.m,x.c]),[null,MON,'0'],['Total ('+GR.length+')',sm,sc]);
-  sheet('Detalle',[...SHOW.map(x=>x[1]),'OBSERVACIÓN'],VIEW.map(r=>[...SHOW.map(([k])=>r[k]),r._note]),[...SHOW.map(([k])=>k==='MONTONETO'?MON:(k==='CANTIDAD'||k==='Cantidad_Reg')?'0':null),null],[...SHOW.map(([k],i)=>k==='MONTONETO'?VIEW.reduce((a,r)=>a+r.MONTONETO,0):k==='Cantidad_Reg'?VIEW.reduce((a,r)=>a+r.Cantidad_Reg,0):i===0?'Total':''),''],VIEW.map(r=>r._g%2?'FFCFD3DA':'FFB9CDEC'));
+  sheet('Detalle',[...SHOW.map(x=>x[1]),'OBSERVACIÓN'],VIEW.map(r=>[...SHOW.map(([k])=>r[k]),r._note]),[...SHOW.map(([k])=>k==='MONTONETO'?MON:(k==='CANTIDAD'||k==='Cantidad_Reg')?'0':null),null],[...SHOW.map(([k],i)=>k==='MONTONETO'?VIEW.reduce((a,r)=>a+r.MONTONETO,0):k==='Cantidad_Reg'?VIEW.reduce((a,r)=>a+r.Cantidad_Reg,0):i===0?'Total':''),''],VIEW.map(r=>r._o?'FFF6B57A':r._g%2?'FFCFD3DA':'FFB9CDEC'));
   const buf=await wb.xlsx.writeBuffer();
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='honorarios_filtrado.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);
 }
