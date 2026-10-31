@@ -61,6 +61,7 @@ table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
 th{position:sticky;top:0;background:var(--hd);color:#fff;text-align:left;padding:9px 12px;font-size:12px;letter-spacing:.04em}
 td{padding:7px 12px;border-bottom:1px solid var(--bd)}
 tbody tr:nth-child(even){background:var(--row)}tbody tr:hover{background:rgba(31,58,95,.09)}
+td.rb{color:#d00000;font-weight:800}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) td.rb{color:#ff7b7b}}
 td.n{text-align:right;font-variant-numeric:tabular-nums}
 tfoot td{font-weight:800;background:var(--card);position:sticky;bottom:0;border-top:2px solid var(--hd)}
 </style></head><body>
@@ -143,8 +144,8 @@ function render(){
   // por NUM_REGAMBULAT: entra si suma de Cantidad_Reg >= 2; si es 1, entra solo con suma de MONTONETO >= 100
   const G=groups(false).sort((a,b)=>b.c-a.c||String(a.n).localeCompare(String(b.n),undefined,{numeric:true}));
   VIEW=G.flatMap(x=>x.rows);GR=G;
-  const NOTE='INCLUIDO EN HONORARIOS DE CONSULTA',NOTE2='INCLUIDO EN HONORARIOS DE PROCEDIMIENTO',NOTE3='RETIRAR MEDICO, SOLO REALIZA TRIAJE',nt=t=>String(t).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),isB=t=>/^(BLOQUEO|CURA)/.test(nt(t)),isC=t=>/^(DIURNA|NOCTURNA|CONSULTA)/.test(nt(t)),isT=e=>/EMERGENCIAPEDIATRICA|PEDIATRIA|EMERGENCISTA/.test(nz(e));
-  G.forEach((x,i)=>{const hc=x.rows.some(r=>isC(r.TARIFA)),hp=x.rows.some(r=>!isC(r.TARIFA)&&!isB(r.TARIFA));x.rows.forEach(r=>{r._g=i;r._note=[isB(r.TARIFA)?(hc&&!hp?NOTE:NOTE2):'',isT(r.ESPECIALIDAD)?NOTE3:''].filter(Boolean).join(' | ')});const o=x.rows.every(r=>r._note.includes(NOTE3));x.rows.forEach(r=>r._o=o)});
+  const NOTE='INCLUIDO EN HONORARIOS DE CONSULTA',NOTE2='INCLUIDO EN HONORARIOS DE PROCEDIMIENTO',NOTE3='RETIRAR MEDICO, SOLO REALIZA TRIAJE',nt=t=>String(t).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),isB=t=>/^(BLOQUEO|CURA)/.test(nt(t)),isC=t=>/^(DIURNA|NOCTURNA|CONSULTA)/.test(nt(t)),isP=q=>/^(INCIS|EXTRAC|ABLAC)/.test(nt(q.TARIFA))&&nz(q.ORIGEN).startsWith('EMERGENCIA'),isT=e=>/EMERGENCIAPEDIATRICA|PEDIATRIA|EMERGENCISTA/.test(nz(e));
+  G.forEach((x,i)=>{const hc=x.rows.some(r=>isC(r.TARIFA)),hp=x.rows.some(r=>!isC(r.TARIFA)&&!isB(r.TARIFA));x.rows.forEach((r,k)=>{r._g=i;const a=/^POR\s+CURA/.test(nt(r.TARIFA))?NOTE:isB(r.TARIFA)?(hc&&!hp?NOTE:NOTE2):(isC(r.TARIFA)&&nz(r.MEDICO)&&x.rows.slice(0,k).some(q=>isP(q)&&nz(q.MEDICO)===nz(r.MEDICO))?NOTE2:'');r._t=isT(r.ESPECIALIDAD);r._note=a?'RETIRAR, '+a:(r._t?NOTE3:'')});const o=x.rows.every(r=>r._t);x.rows.forEach(r=>r._o=o)});
   const sm=VIEW.reduce((s,r)=>s+r.MONTONETO,0),sc=VIEW.reduce((s,r)=>s+r.Cantidad_Reg,0);
   const P=groups(true),pf=P.reduce((s,x)=>s+x.c,0);
   $('k1').textContent=G.length.toLocaleString();$('k2').textContent=money(sm);$('k3').textContent=sc.toLocaleString();
@@ -152,7 +153,7 @@ function render(){
   $('pvb').innerHTML=G.map(x=>`<tr><td>${esc(x.n)}</td><td class="n">${money(x.m)}</td><td class="n">${x.c}</td></tr>`).join('');
   $('pvf').innerHTML=`<tr><td>Total (${G.length})</td><td class="n">${money(sm)}</td><td class="n">${sc.toLocaleString()}</td></tr>`;
   $('th').innerHTML='<tr>'+SHOW.map(x=>`<th>${x[1]}</th>`).join('')+'<th>OBSERVACIÓN</th></tr>';
-  $('tb').innerHTML=VIEW.slice(0,LIM).map(r=>'<tr class="'+(r._o?'g2':'g'+(r._g%2))+'">'+SHOW.map(([k])=>k==='MONTONETO'?`<td class="n">${money(r[k])}</td>`:`<td class="${k==='Cantidad_Reg'||k==='CANTIDAD'?'n':''}">${esc(r[k])}</td>`).join('')+`<td>${esc(r._note)}</td></tr>`).join('');
+  $('tb').innerHTML=VIEW.slice(0,LIM).map(r=>'<tr class="'+(r._o?'g2':'g'+(r._g%2))+'">'+SHOW.map(([k])=>k==='MONTONETO'?`<td class="n${r._note?' rb':''}">${money(r[k])}</td>`:`<td class="${k==='Cantidad_Reg'||k==='CANTIDAD'?'n':''}">${esc(r[k])}</td>`).join('')+`<td>${esc(r._note)}</td></tr>`).join('');
   $('tf').innerHTML='<tr>'+SHOW.map(([k],i)=>`<td class="${k==='MONTONETO'||k==='Cantidad_Reg'?'n':''}">${k==='MONTONETO'?money(sm):k==='Cantidad_Reg'?sc.toLocaleString():i==0?'Total':''}</td>`).join('')+'<td></td></tr>';
   $('mas').style.display=VIEW.length>LIM?'':'none';
   $('pie').textContent=`Detalle: mostrando ${Math.min(LIM,VIEW.length)} de ${VIEW.length} filas`}
@@ -174,7 +175,7 @@ async function dl(){
     ws.mergeCells(2,1,2,n);const f=ws.getCell(2,1);f.value=filt;f.font={italic:true,color:{argb:'FF64748B'}};
     const h=ws.getRow(4);h.height=26;
     cols.forEach((c,i)=>{const x=h.getCell(i+1);x.value=c;x.font={bold:true,color:{argb:'FFFFFFFF'}};x.fill=fill('FF1F3A5F');x.alignment={horizontal:'center',vertical:'middle'};x.border=thin});
-    rows.forEach((r,ri)=>{const row=ws.getRow(5+ri);r.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;c.border=thin;if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'};{const fc=rf?rf[ri]:(ri%2?'FFEEF3F8':null);if(fc)c.fill=fill(fc)}})});
+    rows.forEach((r,ri)=>{const row=ws.getRow(5+ri);r.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;c.border=thin;if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'};if(fmts[i]===MON&&typeof r[r.length-1]==='string'&&r[r.length-1])c.font={bold:true,color:{argb:'FFC00000'}};{const fc=rf?rf[ri]:(ri%2?'FFEEF3F8':null);if(fc)c.fill=fill(fc)}})});
     const tr=ws.getRow(5+rows.length);
     tot.forEach((v,i)=>{const c=tr.getCell(i+1);c.value=v;c.font={bold:true};c.fill=fill('FFE2E8F0');c.border={...thin,top:{style:'medium',color:{argb:'FF1F3A5F'}}};if(fmts[i])c.numFmt=fmts[i];if(typeof v==='number')c.alignment={horizontal:'right'}});
     cols.forEach((c,i)=>{let w=String(c).length+4;rows.forEach(r=>{const v=r[i];const l=typeof v==='number'?(fmts[i]===MON?12:String(v).length+2):String(v??'').length+2;if(l>w)w=l});ws.getColumn(i+1).width=Math.min(48,w)});
